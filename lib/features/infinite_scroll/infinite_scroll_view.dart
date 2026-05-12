@@ -22,15 +22,23 @@ class _InfiniteScrollViewState extends State<InfiniteScrollView> {
     setState(() {
       _isLoading = true;
     });
-    ProfileFetchResult response = await _profileRepository.fetchProfiles(
-      page: _currentPage,
-    );
-    setState(() {
-      _profiles.addAll(response.items);
-      _isLoading = false;
-      if (_profiles.length >= response.total) _hasMore = false;
-      _currentPage += 1;
-    });
+    try {
+      ProfileFetchResult response = await _profileRepository.fetchProfiles(
+        page: _currentPage,
+      );
+      if (!mounted) return;
+      setState(() {
+        _profiles.addAll(response.items);
+        _isLoading = false;
+        if (_profiles.length >= response.total) _hasMore = false;
+        _currentPage += 1;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
