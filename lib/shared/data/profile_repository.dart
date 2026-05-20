@@ -12,8 +12,11 @@ class ProfileFetchResult {
 }
 
 class ProfileRepository {
+  static const int pageSize = 20;
+
   Future<ProfileFetchResult> fetchProfiles({required int page}) async {
-    final String url = 'https://dummyjson.com/users?limit=20&skip=${page * 20}';
+    final String url =
+        'https://dummyjson.com/users?limit=$pageSize&skip=${page * pageSize}';
     final response = await http.get(Uri.parse(url));
 
     if (response.statusCode == 200) {

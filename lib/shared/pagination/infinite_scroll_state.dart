@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 @immutable
 class InfiniteScrollState<T> {
@@ -46,18 +46,15 @@ enum InfiniteScrollStatus {
   completed,
 }
 
-extension InfiniteScrollStatusX<T> on InfiniteScrollState {
+extension InfiniteScrollStatusX on InfiniteScrollState {
   InfiniteScrollStatus get status {
-    final bool hasItems = items != null && items!.isNotEmpty;
-    final bool hasError = error != null;
+    final hasItems = items != null && items!.isNotEmpty;
+    final hasError = error != null;
 
-    if (items == null && !hasError)
-      return InfiniteScrollStatus.loadingFirstPage;
+    if (items == null && !hasError) return InfiniteScrollStatus.loadingFirstPage;
     if (!hasItems && hasError) return InfiniteScrollStatus.firstPageError;
-    if (items != null && items!.isEmpty)
-      return InfiniteScrollStatus.noItemsFound;
-    if (hasItems && hasMore && hasError)
-      return InfiniteScrollStatus.subsequentPageError;
+    if (items != null && items!.isEmpty) return InfiniteScrollStatus.noItemsFound;
+    if (hasItems && hasMore && hasError) return InfiniteScrollStatus.subsequentPageError;
     if (hasItems && hasMore) return InfiniteScrollStatus.onGoing;
     if (hasItems && !hasMore) return InfiniteScrollStatus.completed;
 

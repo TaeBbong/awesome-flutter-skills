@@ -1,14 +1,19 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
-import 'package:awesome_flutter_skills/features/infinite_scroll/controller/infinite_scroll_state.dart';
+import 'package:awesome_flutter_skills/shared/pagination/infinite_scroll_state.dart';
 
-class InfiniteScrollController<T>
+/// A generic, domain-agnostic pagination primitive.
+///
+/// Subclasses implement [fetchPage] to provide the actual data source.
+/// The base class handles dedup, cancellation, and state transitions.
+abstract class PaginatedNotifier<T>
     extends ValueNotifier<InfiniteScrollState<T>> {
-  InfiniteScrollController({required this.fetchPage})
-    : super(InfiniteScrollState<T>());
+  PaginatedNotifier() : super(InfiniteScrollState<T>());
 
-  final Future<({List<T> items, bool hasMore})> Function(int page) fetchPage;
   Object? _operation;
+
+  @protected
+  Future<({List<T> items, bool hasMore})> fetchPage(int page);
 
   Future<void> fetchNextPage() async {
     if (_operation != null) return;
