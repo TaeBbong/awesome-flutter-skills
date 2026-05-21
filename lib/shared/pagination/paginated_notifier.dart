@@ -6,10 +6,7 @@ import 'package:awesome_flutter_skills/shared/pagination/infinite_scroll_state.d
 ///
 /// Subclasses implement [fetchPage] to provide the actual data source.
 /// The base class handles dedup, cancellation, and state transitions.
-abstract class PaginatedNotifier<T>
-    extends ValueNotifier<InfiniteScrollState<T>> {
-  PaginatedNotifier() : super(InfiniteScrollState<T>());
-
+mixin PaginatedMixin<T> on ValueNotifier<InfiniteScrollState<T>> {
   Object? _operation;
 
   @protected
