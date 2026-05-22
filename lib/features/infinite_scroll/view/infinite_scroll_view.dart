@@ -10,8 +10,6 @@ class InfiniteScrollView extends StatefulWidget {
 }
 
 class _InfiniteScrollViewState extends State<InfiniteScrollView> {
-  final ScrollController _scrollController = ScrollController();
-
   late final ProfileListViewModel _viewModel = ProfileListViewModel(
     ProfileRepository(),
   );
@@ -20,17 +18,10 @@ class _InfiniteScrollViewState extends State<InfiniteScrollView> {
   void initState() {
     super.initState();
     _viewModel.fetchNextPage();
-    _scrollController.addListener(() {
-      if (_scrollController.position.pixels + 200 >
-          _scrollController.position.maxScrollExtent) {
-        _viewModel.fetchNextPage();
-      }
-    });
   }
 
   @override
   void dispose() {
-    _scrollController.dispose();
     _viewModel.dispose();
     super.dispose();
   }
@@ -39,44 +30,46 @@ class _InfiniteScrollViewState extends State<InfiniteScrollView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Infinite Scroll')),
-      body: ValueListenableBuilder<InfiniteScrollState<Profile>>(
-        valueListenable: _viewModel,
-        builder: (context, state, _) => switch (state.status) {
-          InfiniteScrollStatus.loadingFirstPage => const Center(
-            child: CircularProgressIndicator(),
-          ),
-          InfiniteScrollStatus.firstPageError => Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('Something went wrong...'),
-                const SizedBox(height: 8),
-                TextButton(
-                  onPressed: _viewModel.fetchNextPage,
-                  child: const Text('Retry'),
-                ),
-              ],
+      body: RefreshIndicator(
+        onRefresh: () async => _viewModel.refresh(),
+        child: ValueListenableBuilder<InfiniteScrollState<Profile>>(
+          valueListenable: _viewModel,
+          builder: (context, state, _) => switch (state.status) {
+            InfiniteScrollStatus.loadingFirstPage => const Center(
+              child: CircularProgressIndicator(),
             ),
-          ),
-          InfiniteScrollStatus.noItemsFound => const Center(
-            child: Text('No profiles found'),
-          ),
-          InfiniteScrollStatus.onGoing ||
-          InfiniteScrollStatus.subsequentPageError ||
-          InfiniteScrollStatus.completed => _buildList(),
-        },
+            InfiniteScrollStatus.firstPageError => Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Something went wrong...'),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: _viewModel.fetchNextPage,
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            ),
+            InfiniteScrollStatus.noItemsFound => const Center(
+              child: Text('No profiles found'),
+            ),
+            InfiniteScrollStatus.onGoing ||
+            InfiniteScrollStatus.subsequentPageError ||
+            InfiniteScrollStatus.completed => _buildList(state),
+          },
+        ),
       ),
     );
   }
 
-  Widget _buildList() {
-    final items = _viewModel.value.items!;
+  Widget _buildList(InfiniteScrollState<Profile> state) {
+    final items = state.items!;
     return ListView.builder(
-      controller: _scrollController,
       itemCount: items.length + 1,
       itemBuilder: (context, index) {
         if (index == items.length) {
-          return switch (_viewModel.value.status) {
+          return switch (state.status) {
             InfiniteScrollStatus.onGoing => const Padding(
               padding: EdgeInsets.all(14),
               child: Center(child: CircularProgressIndicator()),
@@ -96,6 +89,11 @@ class _InfiniteScrollViewState extends State<InfiniteScrollView> {
             ),
             _ => throw StateError('Unreachable InfiniteScrollStatus'),
           };
+        }
+        if (index >= items.length - 3 && state.isReadyToFetchMore) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) _viewModel.fetchNextPage();
+          });
         }
         return ListTile(
           title: Text('${items[index].id} : ${items[index].username}'),

@@ -51,13 +51,22 @@ extension InfiniteScrollStatusX on InfiniteScrollState {
     final hasItems = items != null && items!.isNotEmpty;
     final hasError = error != null;
 
-    if (items == null && !hasError) return InfiniteScrollStatus.loadingFirstPage;
+    if (items == null && !hasError) {
+      return InfiniteScrollStatus.loadingFirstPage;
+    }
     if (!hasItems && hasError) return InfiniteScrollStatus.firstPageError;
-    if (items != null && items!.isEmpty) return InfiniteScrollStatus.noItemsFound;
-    if (hasItems && hasMore && hasError) return InfiniteScrollStatus.subsequentPageError;
+    if (items != null && items!.isEmpty) {
+      return InfiniteScrollStatus.noItemsFound;
+    }
+    if (hasItems && hasMore && hasError) {
+      return InfiniteScrollStatus.subsequentPageError;
+    }
     if (hasItems && hasMore) return InfiniteScrollStatus.onGoing;
     if (hasItems && !hasMore) return InfiniteScrollStatus.completed;
 
     throw StateError('Unknown InfiniteScrollStatus case');
   }
+
+  bool get isReadyToFetchMore =>
+      status == InfiniteScrollStatus.onGoing && !isLoading;
 }
