@@ -5,8 +5,10 @@ import 'package:awesome_flutter_skills/shared/pagination/infinite_scroll_state.d
 import 'package:flutter/material.dart';
 
 class InfiniteScrollView extends StatefulWidget {
+  const InfiniteScrollView({super.key});
+
   @override
-  _InfiniteScrollViewState createState() => _InfiniteScrollViewState();
+  State<InfiniteScrollView> createState() => _InfiniteScrollViewState();
 }
 
 class _InfiniteScrollViewState extends State<InfiniteScrollView> {
@@ -29,7 +31,7 @@ class _InfiniteScrollViewState extends State<InfiniteScrollView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Infinite Scroll')),
+      appBar: AppBar(title: const Text('Infinite Scroll')),
       body: RefreshIndicator(
         onRefresh: () async => _viewModel.refresh(),
         child: ValueListenableBuilder<InfiniteScrollState<Profile>>(
@@ -38,18 +40,8 @@ class _InfiniteScrollViewState extends State<InfiniteScrollView> {
             InfiniteScrollStatus.loadingFirstPage => const Center(
               child: CircularProgressIndicator(),
             ),
-            InfiniteScrollStatus.firstPageError => Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('Something went wrong...'),
-                  const SizedBox(height: 8),
-                  TextButton(
-                    onPressed: _viewModel.fetchNextPage,
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
+            InfiniteScrollStatus.firstPageError => _buildFirstPageError(
+              state.error,
             ),
             InfiniteScrollStatus.noItemsFound => const Center(
               child: Text('No profiles found'),
@@ -100,5 +92,38 @@ class _InfiniteScrollViewState extends State<InfiniteScrollView> {
         );
       },
     );
+  }
+
+  Widget _buildFirstPageError(Object? error) {
+    if (error is ProfileRepositoryException) {
+      return switch (error) {
+        ProfileNetworkException() => Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.wifi_off, size: 48),
+              const Text('Check your internet connection'),
+              TextButton(
+                onPressed: _viewModel.fetchNextPage,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+        ProfileServerException(:final statusCode) => Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Server Exception : $statusCode'),
+              TextButton(
+                onPressed: _viewModel.fetchNextPage,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      };
+    }
+    return Center(child: Text('Unknown error : $error'));
   }
 }
