@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:injectable/injectable.dart';
 
 import '../../shared/domain/models/profile.dart';
 
@@ -11,6 +12,7 @@ class ProfileFetchResult {
   const ProfileFetchResult({required this.items, required this.total});
 }
 
+@lazySingleton
 class ProfileRepository {
   static const int pageSize = 20;
 

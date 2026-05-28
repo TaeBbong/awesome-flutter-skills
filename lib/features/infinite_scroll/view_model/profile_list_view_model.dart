@@ -3,7 +3,9 @@ import 'package:awesome_flutter_skills/shared/domain/models/profile.dart';
 import 'package:awesome_flutter_skills/shared/pagination/infinite_scroll_state.dart';
 import 'package:awesome_flutter_skills/shared/pagination/paginated_notifier.dart';
 import 'package:flutter/foundation.dart';
+import 'package:injectable/injectable.dart';
 
+@injectable
 class ProfileListViewModel extends ValueNotifier<InfiniteScrollState<Profile>>
     with PaginatedMixin<Profile> {
   ProfileListViewModel(this._repository)

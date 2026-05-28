@@ -1,7 +1,9 @@
+import 'package:awesome_flutter_skills/core/di/service_locator.dart';
 import 'package:awesome_flutter_skills/features/infinite_scroll/view/infinite_scroll_view.dart';
 import 'package:flutter/material.dart';
 
 void main() {
+  configureDependencies();
   runApp(const MainApp());
 }
 

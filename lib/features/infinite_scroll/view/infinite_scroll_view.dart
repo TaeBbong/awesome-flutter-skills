@@ -1,3 +1,4 @@
+import 'package:awesome_flutter_skills/core/di/service_locator.dart';
 import 'package:awesome_flutter_skills/features/infinite_scroll/view_model/profile_list_view_model.dart';
 import 'package:awesome_flutter_skills/shared/data/profile_repository.dart';
 import 'package:awesome_flutter_skills/shared/domain/models/profile.dart';
@@ -12,9 +13,7 @@ class InfiniteScrollView extends StatefulWidget {
 }
 
 class _InfiniteScrollViewState extends State<InfiniteScrollView> {
-  late final ProfileListViewModel _viewModel = ProfileListViewModel(
-    ProfileRepository(),
-  );
+  late final ProfileListViewModel _viewModel = getIt<ProfileListViewModel>();
 
   @override
   void initState() {
