@@ -1,6 +1,7 @@
 import 'package:awesome_flutter_skills/core/di/service_locator.dart';
 import 'package:awesome_flutter_skills/features/infinite_scroll/view_model/profile_list_view_model.dart';
-import 'package:awesome_flutter_skills/shared/data/profile_repository.dart';
+import 'package:awesome_flutter_skills/features/infinite_scroll/widgets/first_page_error.dart';
+import 'package:awesome_flutter_skills/features/infinite_scroll/widgets/profile_list_widget.dart';
 import 'package:awesome_flutter_skills/shared/domain/models/profile.dart';
 import 'package:awesome_flutter_skills/shared/pagination/infinite_scroll_state.dart';
 import 'package:flutter/material.dart';
@@ -39,90 +40,23 @@ class _InfiniteScrollViewState extends State<InfiniteScrollView> {
             InfiniteScrollStatus.loadingFirstPage => const Center(
               child: CircularProgressIndicator(),
             ),
-            InfiniteScrollStatus.firstPageError => _buildFirstPageError(
-              state.error,
+            InfiniteScrollStatus.firstPageError => FirstPageError(
+              error: state.error,
+              onRetry: _viewModel.fetchNextPage,
             ),
             InfiniteScrollStatus.noItemsFound => const Center(
               child: Text('No profiles found'),
             ),
             InfiniteScrollStatus.onGoing ||
             InfiniteScrollStatus.subsequentPageError ||
-            InfiniteScrollStatus.completed => _buildList(state),
+            InfiniteScrollStatus.completed => ProfileListWidget(
+              state: state,
+              onRetry: _viewModel.fetchNextPage,
+              onNext: _viewModel.fetchNextPage,
+            ),
           },
         ),
       ),
     );
-  }
-
-  Widget _buildList(InfiniteScrollState<Profile> state) {
-    final items = state.items!;
-    return ListView.builder(
-      itemCount: items.length + 1,
-      itemBuilder: (context, index) {
-        if (index == items.length) {
-          return switch (state.status) {
-            InfiniteScrollStatus.onGoing => const Padding(
-              padding: EdgeInsets.all(14),
-              child: Center(child: CircularProgressIndicator()),
-            ),
-            InfiniteScrollStatus.subsequentPageError => Padding(
-              padding: const EdgeInsets.all(14),
-              child: Center(
-                child: TextButton(
-                  onPressed: _viewModel.fetchNextPage,
-                  child: const Text('Tap to retry'),
-                ),
-              ),
-            ),
-            InfiniteScrollStatus.completed => const Padding(
-              padding: EdgeInsets.all(14),
-              child: Center(child: Text('No more data to load')),
-            ),
-            _ => throw StateError('Unreachable InfiniteScrollStatus'),
-          };
-        }
-        if (index >= items.length - 3 && state.isReadyToFetchMore) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) _viewModel.fetchNextPage();
-          });
-        }
-        return ListTile(
-          title: Text('${items[index].id} : ${items[index].username}'),
-        );
-      },
-    );
-  }
-
-  Widget _buildFirstPageError(Object? error) {
-    if (error is ProfileRepositoryException) {
-      return switch (error) {
-        ProfileNetworkException() => Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.wifi_off, size: 48),
-              const Text('Check your internet connection'),
-              TextButton(
-                onPressed: _viewModel.fetchNextPage,
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
-        ),
-        ProfileServerException(:final statusCode) => Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Server Exception : $statusCode'),
-              TextButton(
-                onPressed: _viewModel.fetchNextPage,
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
-        ),
-      };
-    }
-    return Center(child: Text('Unknown error : $error'));
   }
 }
