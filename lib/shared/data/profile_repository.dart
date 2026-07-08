@@ -12,6 +12,13 @@ class ProfileFetchResult {
   const ProfileFetchResult({required this.items, required this.total});
 }
 
+class ProfileSearchResult {
+  final List<Profile> items;
+  final int total;
+
+  ProfileSearchResult({required this.items, required this.total});
+}
+
 @lazySingleton
 class ProfileRepository {
   static const int pageSize = 20;
@@ -19,8 +26,8 @@ class ProfileRepository {
   Future<ProfileFetchResult> fetchProfiles({required int page}) async {
     final String url =
         'https://dummyjson.com/users?limit=$pageSize&skip=${page * pageSize}';
-
     final http.Response response;
+
     try {
       response = await http.get(Uri.parse(url));
     } catch (_) {
@@ -32,6 +39,30 @@ class ProfileRepository {
       final List<dynamic> raw = body['users'];
       final int total = body['total'];
       return ProfileFetchResult(
+        items: raw.map((profile) => Profile.fromJson(profile)).toList(),
+        total: total,
+      );
+    } else {
+      throw ProfileServerException(response.statusCode);
+    }
+  }
+
+  Future<ProfileSearchResult> searchProfiles({required String query}) async {
+    final http.Response response;
+
+    try {
+      response = await http.get(
+        Uri.https('dummyjson.com', '/users/search', {'q': query}),
+      );
+    } catch (_) {
+      throw ProfileNetworkException();
+    }
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> body = json.decode(response.body);
+      final List<dynamic> raw = body['users'];
+      final int total = body['total'];
+      return ProfileSearchResult(
         items: raw.map((profile) => Profile.fromJson(profile)).toList(),
         total: total,
       );
